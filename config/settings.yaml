@@ -1,0 +1,12 @@
+# Default settings for HyprSnipper
+SAVE_DIR=~/Pictures/Screenshots
+EDITOR=swappy
+COPY_TO_CLIPBOARD=true
+
+# Default post-action toggle states
+SAVE_ENABLED=true
+COPY_ENABLED=true
+EDIT_ENABLED=false
+
+# Path to color palette file (absolute or relative to config/)
+PALETTE_FILE=palette.ini
