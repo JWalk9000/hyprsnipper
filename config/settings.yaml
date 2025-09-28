@@ -1,12 +1,17 @@
 # Default settings for HyprSnipper
-SAVE_DIR=~/Pictures/Screenshots
-EDITOR=swappy
-COPY_TO_CLIPBOARD=true
+SAVE_DIR: ~/Pictures/Screenshots
+EDITOR: swappy
+COPY_TO_CLIPBOARD: true
 
 # Default post-action toggle states
-SAVE_ENABLED=true
-COPY_ENABLED=true
-EDIT_ENABLED=false
+SAVE_ENABLED: true
+COPY_ENABLED: true
+EDIT_ENABLED: false
 
 # Path to color palette file (absolute or relative to config/)
-PALETTE_FILE=palette.ini
+PALETTE_FILE: palette.ini
+
+# Window animation delay in milliseconds
+# Adjust this based on your system's window animation speed
+# 0 = no delay, higher values give more time for animations to complete
+WINDOW_ANIMATION_DELAY: 300

@@ -1,5 +1,5 @@
 #!/bin/bash
-# HyprSnipper install script
+# HyprSnipper install script (using bundled wrapper)
 set -e
 
 RESET=0
@@ -8,87 +8,6 @@ if [[ "$1" == "--reset" ]]; then
     echo "[HyprSnipper] Reset mode: user config and icons will be overwritten with defaults."
 fi
 
-APP_NAME="hyprsnipper"
-CONFIG_DIR="$HOME/.config/$APP_NAME"
-SRC_DIR="$(dirname "$(realpath "$0")")"
-ICONS_DIR="$CONFIG_DIR/icons"
-DEFAULT_ICONS_DIR="$SRC_DIR/resources/icons"
-DESKTOP_FILE="$APP_NAME.desktop"
-
-# 1. Create config dir and copy defaults
-mkdir -p "$CONFIG_DIR"
-mkdir -p "$ICONS_DIR"
-if [[ $RESET -eq 1 ]]; then
-    cp -f "$SRC_DIR/config/settings.yaml" "$CONFIG_DIR/settings.yaml"
-    cp -f "$SRC_DIR/config/palette.ini" "$CONFIG_DIR/palette.ini"
-else
-    cp -n "$SRC_DIR/config/settings.yaml" "$CONFIG_DIR/settings.yaml"
-    cp -n "$SRC_DIR/config/palette.ini" "$CONFIG_DIR/palette.ini"
-fi
-# Copy default icons
-for icon in "$DEFAULT_ICONS_DIR"/*; do
-    fname="$(basename "$icon")"
-    if [[ $RESET -eq 1 ]]; then
-        cp -f "$icon" "$ICONS_DIR/$fname"
-    else
-        if [ ! -f "$ICONS_DIR/$fname" ]; then
-            cp "$icon" "$ICONS_DIR/"
-        fi
-    fi
-    # Support .svg and .png
-    if [[ "$fname" == *.svg ]]; then
-        png="${fname%.svg}.png"
-        if [[ $RESET -eq 1 ]]; then
-            [ -f "$DEFAULT_ICONS_DIR/$png" ] && cp -f "$DEFAULT_ICONS_DIR/$png" "$ICONS_DIR/$png"
-        else
-            [ -f "$DEFAULT_ICONS_DIR/$png" ] && [ ! -f "$ICONS_DIR/$png" ] && cp "$DEFAULT_ICONS_DIR/$png" "$ICONS_DIR/"
-        fi
-    fi
-    if [[ "$fname" == *.png ]]; then
-        svg="${fname%.png}.svg"
-        if [[ $RESET -eq 1 ]]; then
-            [ -f "$DEFAULT_ICONS_DIR/$svg" ] && cp -f "$DEFAULT_ICONS_DIR/$svg" "$ICONS_DIR/$svg"
-        else
-            [ -f "$DEFAULT_ICONS_DIR/$svg" ] && [ ! -f "$ICONS_DIR/$svg" ] && cp "$DEFAULT_ICONS_DIR/$svg" "$ICONS_DIR/"
-        fi
-    fi
-    # User icons in $ICONS_DIR override defaults unless --reset
-    # (no action needed, just don't overwrite unless reset)
-done
-
-# 2. .desktop entry
-read -p "Install as user app (u) or system app (s)? [u/s]: " USYS
-if [[ "$USYS" == "s" ]]; then
-    DESKTOP_PATH="/usr/share/applications/$DESKTOP_FILE"
-    BIN_PATH="/usr/local/bin/$APP_NAME"
-    SUDO=sudo
-    # Copy all app files to /usr/local/bin/hyprsnipper
-    $SUDO mkdir -p "/usr/local/bin/$APP_NAME"
-    $SUDO cp -r "$SRC_DIR"/* "/usr/local/bin/$APP_NAME/"
-    APP_LAUNCH_PATH="/usr/local/bin/$APP_NAME/bin/snip.sh"
-else
-    DESKTOP_PATH="$HOME/.local/share/applications/$DESKTOP_FILE"
-    BIN_PATH="$HOME/.local/bin/$APP_NAME"
-    SUDO=""
-    mkdir -p "$HOME/.local/bin/$APP_NAME"
-    cp -r "$SRC_DIR"/* "$HOME/.local/bin/$APP_NAME/"
-    APP_LAUNCH_PATH="$HOME/.local/bin/$APP_NAME/bin/snip.sh"
-    mkdir -p "$HOME/.local/bin"
-fi
-
-# Write .desktop file
-cat > /tmp/$DESKTOP_FILE <<EOF
-[Desktop Entry]
-Type=Application
-Name=HyprSnipper
-Exec=$APP_LAUNCH_PATH
-Icon=$ICONS_DIR/full.svg
-Terminal=false
-Categories=Utility;
-EOF
-$SUDO cp /tmp/$DESKTOP_FILE "$DESKTOP_PATH"
-
-# 3. Install requirements
 # Detect distro
 if [ -f /etc/os-release ]; then
     . /etc/os-release
@@ -97,29 +16,153 @@ else
     DISTRO="unknown"
 fi
 
-install_python_packages() {
-    if [[ "$DISTRO" == "arch" || "$DISTRO" == "manjaro" ]]; then
-        yay -S --needed python-pyside6 python-pyyaml python-configparser grim slurp wl-clipboard || \
-        sudo pacman -S --needed python-pyside6 python-pyyaml python-configparser grim slurp wl-clipboard
-    elif [[ "$DISTRO" == "debian" || "$DISTRO" == "ubuntu" ]]; then
-        sudo apt update
-        sudo apt install -y python3-pyside6.qtcore python3-pyside6.qtwidgets python3-pyside6.qtgui python3-yaml python3-configparser grim slurp wl-clipboard
-    else
-        echo "Please install Python 3, PySide6, PyYAML, configparser, grim, slurp, wl-clipboard manually."
+APP_NAME="hyprsnipper"
+CONFIG_DIR="$HOME/.config/$APP_NAME"
+SRC_DIR="$(dirname "$(realpath "$0")")"
+DEFAULT_ICONS_DIR="$SRC_DIR/resources/icons"
+
+DESKTOP_FILE="$APP_NAME.desktop"
+SYSTEM_REQS=(grim slurp wl-clipboard pyside6)
+PYTHON_REQS=(pyyaml configparser)
+
+# 1. Create config dir and copy defaults, unless they already exist, or --reset is given.
+create_config_files() {
+    mkdir -p "$CONFIG_DIR"
+    # Only create or overwrite if --reset is given or files/icons don't exist
+    if [[ $RESET -eq 1 || ! -f "$CONFIG_DIR/settings.yaml" ]]; then
+        cp -f "$SRC_DIR/config/settings.yaml" "$CONFIG_DIR/settings.yaml"
+    fi
+    if [[ $RESET -eq 1 || ! -f "$CONFIG_DIR/palette.ini" ]]; then
+        cp -f "$SRC_DIR/config/palette.ini" "$CONFIG_DIR/palette.ini"
+    fi
+    if [[ $RESET -eq 1 || ! -d "$CONFIG_DIR/icons" ]]; then
+        rm -rf "$CONFIG_DIR/icons"
+        mkdir -p "$CONFIG_DIR/icons"
+        cp -r "$DEFAULT_ICONS_DIR/"* "$CONFIG_DIR/icons/"
     fi
 }
 
-install_python_packages
+# 2. Copy files to system or user install dir
+install_as_app() {
+    while true; do
+        read -p "Install as user app (u) or system app (s)? [u/s]: " USYS
+        if [[ "$USYS" == "u" || "$USYS" == "s" ]]; then
+            break
+        else
+            echo "Please enter 'u' for user or 's' for system."
+        fi
+    done
 
-# 4. Add to PATH
-if [[ "$USYS" == "s" ]]; then
-    $SUDO ln -sf "$APP_LAUNCH_PATH" "$BIN_PATH"
-else
-    ln -sf "$APP_LAUNCH_PATH" "$BIN_PATH"
-    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
-        export PATH="$HOME/.local/bin:$PATH"
+    if [[ "$USYS" == "s" ]]; then
+        INSTALL_DIR="/usr/local/share/$APP_NAME"
+        BIN_PATH="/usr/local/bin/$APP_NAME"
+        DESKTOP_PATH="/usr/share/applications/$DESKTOP_FILE"
+        SUDO=sudo
+    else
+        INSTALL_DIR="$HOME/.local/share/$APP_NAME"
+        BIN_PATH="$HOME/.local/bin/$APP_NAME"
+        DESKTOP_PATH="$HOME/.local/share/applications/$DESKTOP_FILE"
+        SUDO=""
+        mkdir -p "$HOME/.local/bin"
     fi
-fi
 
-echo "Install complete! Launch with: $APP_NAME"
+    # Copy source files
+    $SUDO mkdir -p "$INSTALL_DIR"
+    $SUDO rsync -a --delete \
+        --exclude='.git' \
+        --exclude='.vscode' \
+        --exclude='test' \
+        --exclude='__pycache__' \
+        --exclude='*.pyc' \
+        "$SRC_DIR/" "$INSTALL_DIR/"
+    APP_ENTRY="$INSTALL_DIR/$APP_NAME"
+    $SUDO tee "$APP_ENTRY" > /dev/null <<EOF
+#!/bin/bash
+# HyprSnipper launcher script
+cd "$INSTALL_DIR/src"
+exec python3 main.py "\$@"
+EOF
+    $SUDO chmod +x "$APP_ENTRY"
+
+    # Symlink wrapper into PATH
+    $SUDO ln -sf "$APP_ENTRY" "$BIN_PATH"
+}
+
+# 3. Write .desktop file
+create_desktop_entry() {
+    cat > /tmp/$DESKTOP_FILE <<EOF
+[Desktop Entry]
+Type=Application
+Name=HyprSnipper
+Exec=$APP_NAME
+Icon=$CONFIG_DIR/icons/full.svg
+Terminal=false
+Categories=Utility;
+EOF
+    $SUDO mkdir -p "$(dirname "$DESKTOP_PATH")"
+    $SUDO cp /tmp/$DESKTOP_FILE "$DESKTOP_PATH"
+    echo "Desktop entry installed to $DESKTOP_PATH"
+}
+
+# 4. Install required packages
+filter_installed_packages() {
+    local -n arr=$1
+    local pkgtype=$2
+    local filtered=()
+    for pkg in "${arr[@]}"; do
+        if [[ "$pkgtype" == "arch" ]]; then
+            if ! pacman -Qq "$pkg" &>/dev/null; then
+                filtered+=("$pkg")
+            fi
+        elif [[ "$pkgtype" == "debian" ]]; then
+            if ! dpkg -s "$pkg" &>/dev/null; then
+                filtered+=("$pkg")
+            fi
+        fi
+    done
+    arr=("${filtered[@]}")
+}
+
+install_required_packages() {
+    if [[ "$DISTRO" == "arch" || "$DISTRO" == "manjaro" ]]; then
+        NEW_PYTHON_REQS=()
+        for REQ in "${PYTHON_REQS[@]}"; do
+            NEW_PYTHON_REQS+=("python-$REQ")
+        done
+        PYTHON_REQS=("${NEW_PYTHON_REQS[@]}")
+        filter_installed_packages PYTHON_REQS arch
+        filter_installed_packages SYSTEM_REQS arch
+        if [[ ${#PYTHON_REQS[@]} -gt 0 || ${#SYSTEM_REQS[@]} -gt 0 ]]; then
+            yay -S --needed "${SYSTEM_REQS[@]}" "${PYTHON_REQS[@]}" || \
+            sudo pacman -S --needed "${SYSTEM_REQS[@]}" "${PYTHON_REQS[@]}"
+        else
+            echo "All required packages are already installed."
+        fi
+    elif [[ "$DISTRO" == "debian" || "$DISTRO" == "ubuntu" ]]; then
+        NEW_PYTHON_REQS=()
+        for REQ in "${PYTHON_REQS[@]}"; do
+            NEW_PYTHON_REQS+=("python3-$REQ")
+        done
+        PYTHON_REQS=("${NEW_PYTHON_REQS[@]}")
+        filter_installed_packages PYTHON_REQS debian
+        filter_installed_packages SYSTEM_REQS debian
+        if [[ ${#PYTHON_REQS[@]} -gt 0 || ${#SYSTEM_REQS[@]} -gt 0 ]]; then
+            sudo apt update
+            sudo apt install -y "${PYTHON_REQS[@]}" "${SYSTEM_REQS[@]}"
+        else
+            echo "All required packages are already installed."
+        fi
+    else
+        echo "Please install Python 3 and the following packages manually:"
+        echo "Python packages: ${PYTHON_REQS[*]}"
+        echo "System packages: ${SYSTEM_REQS[*]}"
+    fi
+}
+
+# Run steps
+install_as_app
+create_desktop_entry
+create_config_files
+install_required_packages
+
+echo "✅ Install complete! Launch with: $APP_NAME"

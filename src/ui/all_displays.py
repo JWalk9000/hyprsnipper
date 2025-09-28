@@ -13,7 +13,14 @@ class AllDisplaysCapture:
     @staticmethod
     def capture(snipper_window):
         snipper_window.hide()
-        QTimer.singleShot(100, lambda: AllDisplaysCapture._do_capture(snipper_window))
+        # Get configurable delay for window close animation
+        try:
+            with open(SETTINGS_PATH) as f:
+                settings = yaml.safe_load(f) or {}
+                delay = int(settings.get('WINDOW_ANIMATION_DELAY', 300))
+        except (FileNotFoundError, ValueError, TypeError, yaml.YAMLError):
+            delay = 300
+        QTimer.singleShot(delay, lambda: AllDisplaysCapture._do_capture(snipper_window))
 
     @staticmethod
     def _do_capture(snipper_window):

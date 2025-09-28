@@ -1,4 +1,5 @@
-from PySide6.QtCore import QTimer, QCursor
+from PySide6.QtCore import QTimer
+from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QApplication
 import os
 import datetime
@@ -10,11 +11,27 @@ import yaml
 
 SETTINGS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../config/settings.yaml'))
 
+def get_animation_delay():
+    """Load window animation delay from settings.yaml, defaulting to 300ms"""
+    try:
+        with open(SETTINGS_PATH) as f:
+            settings = yaml.safe_load(f) or {}
+            return int(settings.get('WINDOW_ANIMATION_DELAY', 300))
+    except (FileNotFoundError, ValueError, TypeError):
+        return 300
+
 class FullDisplayCapture:
     @staticmethod
     def capture(snipper_window):
         snipper_window.hide()
-        QTimer.singleShot(100, lambda: FullDisplayCapture._do_capture(snipper_window))
+        # Get configurable delay for window close animation
+        try:
+            with open(SETTINGS_PATH) as f:
+                settings = yaml.safe_load(f) or {}
+                delay = int(settings.get('WINDOW_ANIMATION_DELAY', 300))
+        except (FileNotFoundError, ValueError, TypeError, yaml.YAMLError):
+            delay = 300
+        QTimer.singleShot(delay, lambda: FullDisplayCapture._do_capture(snipper_window))
 
     @staticmethod
     def _do_capture(snipper_window):

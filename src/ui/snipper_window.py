@@ -51,6 +51,16 @@ def get_user_or_default_config(filename):
 SETTINGS_PATH = get_user_or_default_config('settings.yaml')
 PALETTE_PATH = get_user_or_default_config('palette.ini')
 
+def get_animation_delay():
+    """Load window animation delay from settings.yaml, defaulting to 300ms"""
+    try:
+        with open(SETTINGS_PATH) as f:
+            settings = yaml.safe_load(f) or {}
+            return int(settings.get('WINDOW_ANIMATION_DELAY', 300))
+    except (FileNotFoundError, ValueError, TypeError, yaml.YAMLError):
+        # Return default value if file doesn't exist, is corrupted, or has invalid YAML
+        return 300
+
 class SnipperWindow(QWidget):
     def closeEvent(self, event):
         super().closeEvent(event)
@@ -151,7 +161,7 @@ class SnipperWindow(QWidget):
 
     def _launch_window_capture(self):
         self.hide()
-        QTimer.singleShot(150, self._show_window_selector_overlay)
+        QTimer.singleShot(get_animation_delay(), self._show_window_selector_overlay)
 
     def _show_window_selector_overlay(self):
         import json

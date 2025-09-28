@@ -2,6 +2,19 @@
 from PySide6.QtCore import Qt, QRect, QTimer
 from PySide6.QtGui import QPainter, QColor, QPen, QFont
 from PySide6.QtWidgets import QWidget
+import os
+import yaml
+
+SETTINGS_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../config/settings.yaml'))
+
+def get_animation_delay():
+    """Load window animation delay from settings.yaml, defaulting to 300ms"""
+    try:
+        with open(SETTINGS_PATH) as f:
+            settings = yaml.safe_load(f) or {}
+            return int(settings.get('WINDOW_ANIMATION_DELAY', 300))
+    except (FileNotFoundError, ValueError, TypeError, yaml.YAMLError):
+        return 300
 
 class WindowSelectorOverlay(QWidget):
     def __init__(self, parent, windows, on_select, monitor_rect=None):
@@ -89,16 +102,19 @@ class WindowSelectorOverlay(QWidget):
                 break
 
     def _select(self, geom_str):
-        # Hide immediately, then call snip after delay
+        # Hide immediately, then call snip after configurable delay
         self.hide()
         if self.on_select:
-            QTimer.singleShot(320, lambda: (self.close(), self.on_select(geom_str)))
+            delay = get_animation_delay()
+            QTimer.singleShot(delay, lambda: (self.close(), self.on_select(geom_str)))
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.close()
             # Show parent (main snipper) window if available
             if self.parent() is not None:
-                QTimer.singleShot(100, self.parent().show)
+                # Use shorter delay for showing parent, as it's less critical
+                delay = max(100, get_animation_delay() // 3)
+                QTimer.singleShot(delay, self.parent().show)
         else:
             super().keyPressEvent(event)
