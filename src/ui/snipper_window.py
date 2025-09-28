@@ -39,6 +39,73 @@ def get_icon_path(icon_base):
             return default_icon
     return ''  # fallback: empty
 
+def create_colored_icon(icon_path, color):
+    """
+    Creates a QIcon with the specified color for monochromatic SVG icons.
+    For PNG icons, returns the original icon.
+    """
+    if not icon_path or not os.path.exists(icon_path):
+        return QIcon()
+    
+    if icon_path.endswith('.svg'):
+        try:
+            # Read SVG content
+            with open(icon_path, 'r', encoding='utf-8') as f:
+                svg_content = f.read()
+            
+            # Replace common fill colors with the desired color
+            # This handles fill="#000000", fill="#323544", fill="black", etc.
+            import re
+            # Replace fill attributes (but preserve 'none' and transparent fills)
+            svg_content = re.sub(
+                r'fill="(?!none|transparent)[^"]*"', 
+                f'fill="{color}"', 
+                svg_content
+            )
+            # Also replace stroke colors for line art
+            svg_content = re.sub(
+                r'stroke="(?!none|transparent)[^"]*"', 
+                f'stroke="{color}"', 
+                svg_content
+            )
+            # Replace CSS-style fill colors in style attributes (fill:#000000)
+            # More precise regex that only matches the color value, not beyond
+            svg_content = re.sub(
+                r'fill:(?!none|transparent)\s*(#[0-9a-fA-F]{3,8}|[a-zA-Z]+)', 
+                f'fill:{color}', 
+                svg_content
+            )
+            # Replace CSS-style stroke colors in style attributes (stroke:#000000)
+            svg_content = re.sub(
+                r'stroke:(?!none|transparent)\s*(#[0-9a-fA-F]{3,8}|[a-zA-Z]+)', 
+                f'stroke:{color}', 
+                svg_content
+            )
+            
+            # Create QIcon from modified SVG
+            from PySide6.QtCore import QByteArray
+            from PySide6.QtSvg import QSvgRenderer
+            from PySide6.QtGui import QPixmap, QPainter
+            
+            svg_bytes = QByteArray(svg_content.encode('utf-8'))
+            renderer = QSvgRenderer(svg_bytes)
+            
+            # Create pixmap and render SVG
+            pixmap = QPixmap(64, 64)  # Standard icon size
+            pixmap.fill(Qt.transparent)
+            painter = QPainter(pixmap)
+            renderer.render(painter)
+            painter.end()
+            
+            return QIcon(pixmap)
+            
+        except Exception as e:
+            print(f"[HyprSnipper] Warning: Could not colorize icon {icon_path}: {e}")
+            return QIcon(icon_path)  # Fallback to original
+    else:
+        # For PNG icons, return as-is
+        return QIcon(icon_path)
+
 
 import yaml
 
@@ -92,7 +159,9 @@ class SnipperWindow(QWidget):
             btn = QPushButton()
             icon_path = get_icon_path(icon_base)
             if icon_path:
-                btn.setIcon(QIcon(icon_path))
+                # Create colored icon using palette color
+                colored_icon = create_colored_icon(icon_path, self.palette['icon_color'])
+                btn.setIcon(colored_icon)
             btn.setIconSize(QApplication.primaryScreen().availableGeometry().size() / 16)
             btn.setToolTip(tooltip)
             btn.setCheckable(True)

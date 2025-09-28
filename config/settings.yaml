@@ -10,6 +10,8 @@ EDIT_ENABLED: false
 
 # Path to color palette file (absolute or relative to config/)
 PALETTE_FILE: palette.ini
+#PALETTE_FILE: "~/.cache/wal/hyprsnipper.ini"
+
 
 # Window animation delay in milliseconds
 # Adjust this based on your system's window animation speed
