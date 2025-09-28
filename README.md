@@ -1,41 +1,42 @@
-# HyprSnipper - Professional Snipping Tool for Hyprland/Wayland
+# HyprSnipper - A Friendly Snipping Tool for Hyprland
 
-A modern, Qt-based screenshot tool designed specifically for Hyprland and Wayland environments. HyprSnipper provides intuitive window selection, flexible capture modes, and seamless integration with your workflow.
+None of the screen-shot tools that I've tried on Hyprland have quite been what I wanted, either multiple key-binds were needed, and/or certain functionality was just not available at all. 
+My solution is a Qt-based screenshot tool designed specifically for Hyprland. HyprSnipper provides 4 capture modes, with intuitive window selection, simple integration with your system, and supports editing in your prefered annotation application.
 
 ## Features
 
-- **Four Capture Modes**:
+- **Capture Modes**:
   - **Region**: Interactive area selection with slurp
-  - **Window**: Visual window layout selector resonably accurate respect to stacking
+  - **Window**: Visual window layout selector with resonably accurate respect to stacking
   - **Full Display**: Capture the entire active display
   - **All Displays**: Capture all connected displays at once
 
-- **Smart Window Selection**: Custom overlay that recreates your window layout for precise selection, working around Wayland input capture limitations
+- **Intuitive Window Selection**: Uses a window selector that recreates the window layout on the active monitor for application window selection, this is my work-around for the Wayland input capture limitations.
 
 - **Flexible Output Options**:
-  - Save to customizable directory
+  - Save to your preferred directory
   - Copy to clipboard (wl-clipboard)
   - Open in external editor (swappy, gimp, etc.)
 
-- **Configurable UI**:
-  - Minimal, borderless design
-  - Hover transparency effects
-  - User-customizable icons and color palette
-  - Configurable window animation delays
+- **UI Features**:
+  - Minimal design.
+  - User-customizable icons and color palette.
+  - Configurable window animation delays.
 
 ## Quick Start
 
-### Automated Installation
+### Installation
 ```bash
 git clone https://github.com/JWalk9000/hyprsnipper.git
 cd hyprsnipper
 ./install.sh
 ```
+Cloned directory can be deleted after install.
 
 The installer will:
 - Install system dependencies (grim, slurp, wl-clipboard, pyside6)
 - Set up user configuration directory
-- Create desktop entry
+- Create a desktop entry
 - Add to PATH
 
 ### Manual Installation
@@ -61,20 +62,11 @@ HyprSnipper stores user configuration in `~/.config/hyprsnipper/`:
 - `palette.ini` - Color theme configuration  
 - `icons/` - Custom icon overrides (optional)
 
-### Key Settings
+### Customizing
 
 **settings.yaml**:
-```yaml
-SAVE_DIR: ~/Pictures/Screenshots          # Screenshot save location
-EDITOR: swappy                            # External editor command
-COPY_TO_CLIPBOARD: true                   # Auto-copy to clipboard
-WINDOW_ANIMATION_DELAY: 300              # Delay for window close animations (ms)
 
-# Default toggle states
-SAVE_ENABLED: true
-COPY_ENABLED: true  
-EDIT_ENABLED: false
-```
+I have included (hopefully) clear notes in the settings file for customizing its behavior to fit your desires.
 
 ### Custom Icons
 
@@ -84,6 +76,8 @@ Place custom `.svg` or `.png` icons in `~/.config/hyprsnipper/icons/` to overrid
 - `full.svg` - Full display mode
 - `alldisplays.svg` - All displays mode
 
+**Note**: Currently, HyprSnipper applies theme colors to ALL SVG icons, regardless of their original design. This works best with **monochrome icons** (simple single-color designs). Colorful, multi-color icons will have all their colors replaced with the theme's `icon_color`. Support for preserving colorful icon designs is planned for future versions if there is enough interest.
+
 ### Pywal Integration
 
 HyprSnipper supports automatic theming with [pywal](https://github.com/dylanaraps/pywal):
@@ -92,6 +86,7 @@ HyprSnipper supports automatic theming with [pywal](https://github.com/dylanarap
    ```bash
    cp resources/wal/hyprsnipper.ini ~/.config/wal/templates/
    ```
+   This template can be customized to use different generated colors if you desire.
 
 2. **Update your settings** to use pywal colors:
    ```yaml
@@ -110,22 +105,21 @@ The `PALETTE_FILE` setting supports both absolute paths and paths relative to `~
 
 HyprSnipper uses a simplified 8-color palette system for easy theming:
 
-- `background` - Main window background
+- `background` - Main window background 
 - `primary` - Selection rectangles and accents  
 - `button_bg` / `button_checked` / `button_hover` - Button states
 - `checkbox_fg` - Checkbox text color
-- `icon_color` - SVG icon color (monochromatic icons are automatically recolored)
+- `icon_color` - SVG icon color (**Note**: All SVG colors are replaced with this color - use monochrome icons for best results)
 - `tooltip_bg` / `tooltip_fg` - Tooltip appearance
 
 ## Hyprland Integration
 
-Add this to your `hyprland.conf` for optimal window selection:
-
+Add this to your `hyprland.conf` for so that it floats correctly.
 ```conf
-# Float the window selector overlay
 windowrule = float, title:HyprSnipperSelector
-
-# Optional: Bind to a key for quick access
+```
+Optional: Bind to a key for quick access
+```conf
 bind = $mainMod SHIFT, S, exec, hyprsnipper
 ```
 
@@ -168,19 +162,20 @@ EDITOR: swappy            # Default: swappy for quick annotation
 ```
 
 ### Reset Configuration
+If, for any reason, you wish to return to a default configuration you can run this to reset the config. I primarily used this for testing, but there it is if you need it.
 ```bash
 ./install.sh --reset      # Restore default settings and icons
 ```
 
 ## Troubleshooting
 
-**Window selector shows empty/wrong layout**: Ensure windows are mapped and visible in the current workspace.
+**Window selector shows empty/wrong layout**: Ensure main Hyprsnipper UI is opened on workspace you want to take the snip of.
 
 **Screenshots include HyprSnipper UI**: Increase `WINDOW_ANIMATION_DELAY` in settings.yaml.
 
 **Permission errors during install**: Check that you have write access to install directories.
 
-**Missing dependencies**: The installer will detect and install required packages automatically.
+**Missing dependencies**: The installer should detect and install required packages automatically, if you find something missing please let me know.
 
 ## Dependencies
 
