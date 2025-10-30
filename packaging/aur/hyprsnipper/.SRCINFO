@@ -1,6 +1,6 @@
 pkgbase = hyprsnipper
 	pkgdesc = A friendly snipping tool for Hyprland/Wayland (Qt/PySide6)
-	pkgver = 1.0.0
+	pkgver = 1.0.1
 	pkgrel = 1
 	url = https://github.com/JWalk9000/hyprsnipper
 	arch = x86_64
@@ -16,7 +16,7 @@ pkgbase = hyprsnipper
 	optdepends = swappy: quick annotation editor
 	optdepends = gimp: image editor
 	optdepends = krita: image editor
-	source = https://github.com/JWalk9000/hyprsnipper/archive/refs/tags/v1.0.0.tar.gz
+	source = https://github.com/JWalk9000/hyprsnipper/archive/refs/tags/v1.0.1.tar.gz
 	sha256sums = SKIP
 
 pkgname = hyprsnipper

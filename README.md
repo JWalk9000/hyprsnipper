@@ -25,6 +25,20 @@ My solution is a Qt-based screenshot tool designed specifically for Hyprland. Hy
 
 ## Quick Start
 
+### Download (AppImage)
+
+If you prefer a portable binary, download the latest AppImage from the GitHub Releases page:
+
+- Releases: https://github.com/JWalk9000/hyprsnipper/releases
+
+Run it:
+```bash
+chmod +x HyprSnipper-*.AppImage
+./HyprSnipper-*.AppImage
+```
+
+Note: The AppImage bundles Python and PySide6. You still need the host Wayland tools installed (grim, slurp, wl-clipboard) and Hyprland's `hyprctl` for window selection mode.
+
 ### Installation
 ```bash
 git clone https://github.com/JWalk9000/hyprsnipper.git
