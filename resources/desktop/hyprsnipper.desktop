@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=HyprSnipper
+Exec=hyprsnipper
+Icon=/usr/share/hyprsnipper/resources/icons/full.svg
+Terminal=false
+Categories=Utility;Graphics;
+Comment=Lightweight snipping tool for Hyprland/Wayland

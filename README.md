@@ -77,7 +77,13 @@ Place custom `.svg` or `.png` icons in `~/.config/hyprsnipper/icons/` to overrid
 - `alldisplays.svg` - All displays mode
 
 **Note**: HyprSnipper applies theme colors to ALL SVG icons, regardless of their original design. This works best with **monochrome icons** (simple single-color designs). Colorful, multi-color SVG icons will have all their colors replaced with the theme's `icon_color`. Support for preserving colorful icon designs may be supported in future versions if there is enough interest.
-Currently if you desire static color or multicolor icons then PNGs are the way to go.
+
+#### Icon format behavior
+
+- SVG icons: automatically recolored to your palette's `icon_color` (best for monochrome SVGs)
+- PNG icons: preserved as-is with their original colors (best for multi-color artwork)
+
+Tip: Mix formats to taste—use SVG for themeable icons and PNG for colorful ones.
 
 ### Pywal Integration
 
