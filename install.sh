@@ -11,9 +11,11 @@ fi
 # Detect distro
 if [ -f /etc/os-release ]; then
     . /etc/os-release
-    DISTRO=$ID
+    DISTRO=${ID:-unknown}
+    ID_LIKE=${ID_LIKE:-}
 else
     DISTRO="unknown"
+    ID_LIKE=""
 fi
 
 APP_NAME="hyprsnipper"
@@ -124,7 +126,8 @@ filter_installed_packages() {
 }
 
 install_required_packages() {
-    if [[ "$DISTRO" == "arch" || "$DISTRO" == "manjaro" ]]; then
+    # Treat common Arch derivatives as Arch
+    if [[ "$DISTRO" == "arch" || "$DISTRO" == "manjaro" || "$DISTRO" == "endeavouros" || "$DISTRO" == "garuda" || "$DISTRO" == "artix" || "$DISTRO" == "cachyos" || "$ID_LIKE" == *"arch"* ]]; then
         NEW_PYTHON_REQS=()
         for REQ in "${PYTHON_REQS[@]}"; do
             NEW_PYTHON_REQS+=("python-$REQ")
@@ -133,12 +136,15 @@ install_required_packages() {
         filter_installed_packages PYTHON_REQS arch
         filter_installed_packages SYSTEM_REQS arch
         if [[ ${#PYTHON_REQS[@]} -gt 0 || ${#SYSTEM_REQS[@]} -gt 0 ]]; then
-            yay -S --needed "${SYSTEM_REQS[@]}" "${PYTHON_REQS[@]}" || \
-            sudo pacman -S --needed "${SYSTEM_REQS[@]}" "${PYTHON_REQS[@]}"
+            if command -v yay >/dev/null 2>&1; then
+                yay -S --needed "${SYSTEM_REQS[@]}" "${PYTHON_REQS[@]}" || sudo pacman -S --needed "${SYSTEM_REQS[@]}" "${PYTHON_REQS[@]}"
+            else
+                sudo pacman -S --needed "${SYSTEM_REQS[@]}" "${PYTHON_REQS[@]}"
+            fi
         else
             echo "All required packages are already installed."
         fi
-    elif [[ "$DISTRO" == "debian" || "$DISTRO" == "ubuntu" ]]; then
+    elif [[ "$DISTRO" == "debian" || "$DISTRO" == "ubuntu" || "$ID_LIKE" == *"debian"* ]]; then
         NEW_PYTHON_REQS=()
         for REQ in "${PYTHON_REQS[@]}"; do
             NEW_PYTHON_REQS+=("python3-$REQ")
@@ -152,6 +158,15 @@ install_required_packages() {
         else
             echo "All required packages are already installed."
         fi
+    elif [[ "$DISTRO" == "fedora" || "$DISTRO" == "rhel" || "$DISTRO" == "centos" || "$ID_LIKE" == *"rhel"* || "$ID_LIKE" == *"fedora"* ]]; then
+        # Fedora family
+        PY_PKGS=(python3-pyyaml python3-configparser python3-pyside6)
+        SYS_PKGS=(grim slurp wl-clipboard libnotify)
+        sudo dnf install -y "${PY_PKGS[@]}" "${SYS_PKGS[@]}" || sudo yum install -y "${PY_PKGS[@]}" "${SYS_PKGS[@]}"
+    elif [[ "$DISTRO" == "opensuse-tumbleweed" || "$DISTRO" == "opensuse-leap" || "$ID_LIKE" == *"suse"* ]]; then
+        PY_PKGS=(python3-PyYAML python3-configparser python3-PySide6)
+        SYS_PKGS=(grim slurp wl-clipboard libnotify-tools)
+        sudo zypper install -y "${PY_PKGS[@]}" "${SYS_PKGS[@]}"
     else
         echo "Please install Python 3 and the following packages manually:"
         echo "Python packages: ${PYTHON_REQS[*]}"

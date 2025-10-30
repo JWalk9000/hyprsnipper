@@ -1,6 +1,6 @@
 # Maintainer: JWalk9000 <you@example.com>
 pkgname=hyprsnipper
-pkgver=1.0.0
+pkgver=1.0.1
 pkgrel=1
 pkgdesc="A friendly snipping tool for Hyprland/Wayland (Qt/PySide6)"
 arch=('x86_64' 'aarch64')
