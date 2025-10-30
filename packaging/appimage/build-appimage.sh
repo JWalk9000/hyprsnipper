@@ -98,12 +98,24 @@ if [ "$USE_PLUGIN" -eq 1 ]; then
       --python-include "$(tr '\n' ' ' < "$PROJECT_ROOT/requirements.txt")"
 else
   "$TOOLS_DIR/linuxdeploy-${ARCH}.AppImage" \
-      --appdir "$APPDIR" \
-      --executable "$APPDIR/usr/bin/$BIN_NAME" \
-      --desktop-file "$APPDIR/usr/share/applications/hyprsnipper.desktop" \
-      --icon-file "$APPDIR/usr/share/icons/hicolor/scalable/apps/hyprsnipper.svg" \
-      --output appimage
+        --appdir "$APPDIR" \
+        --executable "$APPDIR/usr/bin/$BIN_NAME" \
+        --desktop-file "$APPDIR/usr/share/applications/hyprsnipper.desktop" \
+        --icon-file "$APPDIR/usr/share/icons/hicolor/scalable/apps/hyprsnipper.svg" \
+        --output appimage
 fi
 
-mv "$OUTPUT" "$PROJECT_ROOT/$OUTPUT"
-echo "Created $PROJECT_ROOT/$OUTPUT"
+  # Move output to project root if needed
+  if [ -f "$OUTPUT" ]; then
+    SRC_PATH="$(realpath "$OUTPUT")"
+    DST_PATH="$(realpath -m "$PROJECT_ROOT/$OUTPUT")"
+    if [ "$SRC_PATH" != "$DST_PATH" ]; then
+      mv "$OUTPUT" "$PROJECT_ROOT/$OUTPUT"
+      echo "Created $PROJECT_ROOT/$OUTPUT"
+    else
+      echo "[build] Output already at $DST_PATH"
+    fi
+  else
+    echo "[build] ERROR: Expected output $OUTPUT not found" >&2
+    exit 1
+  fi
