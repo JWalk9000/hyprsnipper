@@ -38,6 +38,18 @@ chmod +x HyprSnipper-*.AppImage
 ```
 
 Note: The AppImage bundles Python and PySide6. You still need the host Wayland tools installed (grim, slurp, wl-clipboard) and Hyprland's `hyprctl` for window selection mode.
+If it fails to launch with a libfuse error, see the AppImage note: [libfuse2 required](#appimage-fuse2).
+
+<a id="appimage-prereq"></a>
+Prerequisite for AppImage: FUSE 2 runtime (libfuse2)
+
+- Arch/Manjaro: `sudo pacman -S fuse2`
+- Ubuntu/Debian:
+   - Ubuntu 24.04+: `sudo apt install libfuse2t64`
+   - Ubuntu 22.04/20.04, Debian stable: `sudo apt install libfuse2`
+- Fedora: `sudo dnf install fuse fuse-libs`
+- openSUSE: `sudo zypper install libfuse2`
+- NixOS: use `appimage-run` (from `nixpkgs.appimage-run`) or enable FUSE 2.
 
 ### Installation
 ```bash
@@ -198,6 +210,14 @@ If, for any reason, you wish to return to a default configuration you can run th
 
 **Missing dependencies**: The installer should detect and install required packages automatically, if you find something missing please let me know.
 
+### AppImage: libfuse2 required
+<a id="appimage-fuse2"></a>
+If you see `dlopen(): error loading libfuse.so.2` when launching the AppImage, install the FUSE 2 runtime (libfuse2). See the [AppImage prerequisite](#appimage-prereq) above for distro-specific commands. As a workaround, you can also run:
+
+```bash
+./HyprSnipper-*.AppImage --appimage-extract-and-run
+```
+
 ## Dependencies
 
 - **Python 3.7+** (uses `subprocess.run(capture_output=True)` - could be made 3.6+ compatible)
@@ -206,6 +226,10 @@ If, for any reason, you wish to return to a default configuration you can run th
 - **grim** - Wayland screenshot utility
 - **slurp** - Wayland area selection  
 - **wl-clipboard** - Wayland clipboard integration
+
+Additional dependency for AppImage users
+
+- **libfuse2** (FUSE 2 runtime) – required to run the `HyprSnipper-*.AppImage` on most distributions.
 
 ### Python Version Compatibility
 
