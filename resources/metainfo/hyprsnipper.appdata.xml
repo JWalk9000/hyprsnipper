@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Minimal AppStream metadata to satisfy appimagetool and app stores -->
+<component type="desktop-application">
+  <id>hyprsnipper.desktop</id>
+  <name>HyprSnipper</name>
+  <summary>Lightweight snipping tool for Hyprland/Wayland</summary>
+  <description>
+    <p>HyprSnipper lets you capture your screen or a region with a simple Qt UI, using Wayland tools like grim, slurp, and wl-clipboard. It integrates with Hyprland and supports Pywal theming.</p>
+  </description>
+  <launchable type="desktop-id">hyprsnipper.desktop</launchable>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <url type="homepage">https://github.com/your-org/hyprsnipper</url>
+  <provides>
+    <binary>hyprsnipper</binary>
+  </provides>
+  <categories>
+    <category>Graphics</category>
+    <category>Utility</category>
+  </categories>
+</component>
