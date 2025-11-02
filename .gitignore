@@ -1,0 +1,36 @@
+# Python caches
+__pycache__/
+*/__pycache__/
+*.py[cod]
+
+# Virtual environments and local tooling
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.pyright/
+
+# Coverage
+.coverage
+coverage.xml
+
+# Build artifacts
+build/
+dist/
+hyprsnipper.spec
+
+# AppImage build outputs and tools
+HyprSnipper.AppDir/
+squashfs-root/
+*.AppImage
+packaging/appimage/tools/venv-build/
+packaging/appimage/tools/linuxdeploy-*.AppImage
+packaging/appimage/tools/appimagetool-*.AppImage
+packaging/appimage/tools/linuxdeploy-plugin-python-*.AppImage
+
+# OS/editor junk
+.DS_Store
+*.log
+*.swp
+*~
