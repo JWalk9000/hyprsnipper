@@ -58,19 +58,27 @@ EOF
   chmod +x "$APPDIR/usr/bin/$BIN_NAME"
 else
   echo "[build] Using PyInstaller bundling (fallback)"
-  # Ensure Python deps installed
+  # Ensure Python deps installed (pin PyInstaller for stability)
   python3 -m pip install --upgrade pip
-  python3 -m pip install -r "$PROJECT_ROOT/requirements.txt" pyinstaller
-  # Build binary with PyInstaller
+  python3 -m pip install -r "$PROJECT_ROOT/requirements.txt" "pyinstaller>=6.6"
+  # Build onedir so libpython and all libs live beside the binary (more robust inside AppImage)
   cd "$PROJECT_ROOT"
-  pyinstaller -y --noconsole --name "$BIN_NAME" \
+  pyinstaller -y --noconsole --name "$BIN_NAME" --onedir \
     --paths src \
     --add-data "config:config" \
     --add-data "resources:resources" \
     src/main.py
-  # Place binary into AppDir
-  install -m755 -D "$PROJECT_ROOT/dist/$BIN_NAME/$BIN_NAME" "$APPDIR/usr/bin/$BIN_NAME"
-  # Also ship the data alongside in share
+  # Place the onedir bundle into AppDir and wrap it
+  mkdir -p "$APPDIR/usr/lib/$BIN_NAME"
+  cp -r "$PROJECT_ROOT/dist/$BIN_NAME"/* "$APPDIR/usr/lib/$BIN_NAME/"
+  # Wrapper executes the bundled binary directly
+  cat > "$APPDIR/usr/bin/$BIN_NAME" <<'EOF'
+#!/usr/bin/env bash
+set -e
+exec "$(dirname "$0")/../lib/hyprsnipper/hyprsnipper" "$@"
+EOF
+  chmod +x "$APPDIR/usr/bin/$BIN_NAME"
+  # Also ship the data alongside in share for non-PyInstaller path parity
   cp -r "$PROJECT_ROOT/config" "$APPDIR/usr/share/$BIN_NAME/"
   cp -r "$PROJECT_ROOT/resources" "$APPDIR/usr/share/$BIN_NAME/"
 fi
@@ -84,6 +92,7 @@ cp "$PROJECT_ROOT/resources/icons/full.svg" "$APPDIR/usr/share/icons/hicolor/sca
 # Environment for linuxdeploy
 export OUTPUT="${APPNAME}-${ARCH}.AppImage"
 export VERSION="${VERSION:-v1.0.1}"
+export PYTHONNOUSERSITE=1
 
 # Use linuxdeploy with python plugin to bundle Python + deps from requirements.txt
 if [ "$USE_PLUGIN" -eq 1 ]; then
