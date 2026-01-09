@@ -25,24 +25,40 @@ class WindowSelectorOverlay(QWidget):
         self.windows = windows
         self.on_select = on_select
         self.selected_idx = None
+        # Get screen first for accurate monitor dimensions
+        screen = self.screen() or (self.parent().screen() if self.parent() else None)
         self.monitor_rect = monitor_rect or self._get_monitor_rect()
-        # Set preview size
-        self.PREVIEW_W, self.PREVIEW_H = 600, 350
-        self._scale_x, self._scale_y = self._calc_scale()
-        # Center the window on the screen
-        screen = self.screen() or self.parent().screen() if self.parent() else None
+        # Derive preview size from monitor aspect ratio and fit within work area
+        mon_w, mon_h = self.monitor_rect[2], self.monitor_rect[3]
+        ratio = (mon_w / mon_h) if mon_w and mon_h else 1.0
+        # Base target size; keep consistent but preserve aspect ratio
+        base_w, base_h = 800, int(800 / ratio) if ratio else 600
+        # Fit inside available work area with margin
         if screen:
-            scr_geo = screen.geometry()
-            x = scr_geo.x() + (scr_geo.width() - self.PREVIEW_W) // 2
-            y = scr_geo.y() + (scr_geo.height() - self.PREVIEW_H) // 2
+            avail = screen.availableGeometry()
+            max_w = max(100, avail.width() - 64)
+            max_h = max(100, avail.height() - 64)
+            scale = min(max_w / base_w, max_h / base_h, 1.0)
+            self.PREVIEW_W = int(base_w * scale)
+            self.PREVIEW_H = int(base_h * scale)
+            x = avail.x() + (avail.width() - self.PREVIEW_W) // 2
+            y = avail.y() + (avail.height() - self.PREVIEW_H) // 2
         else:
+            self.PREVIEW_W, self.PREVIEW_H = base_w, base_h
             x, y = 100, 100
-        self.setGeometry(x, y, self.PREVIEW_W, self.PREVIEW_H)
+        self._scale_x, self._scale_y = self._calc_scale()
+        self.setFixedSize(self.PREVIEW_W, self.PREVIEW_H)
+        self.move(x, y)
         self.setWindowTitle("HyprSnipperSelector")
         self.show()
 
     def _get_monitor_rect(self):
-        # fallback: use bounding box of all windows
+        # Prefer the active screen geometry for accurate monitor dimensions
+        screen = self.screen() or (self.parent().screen() if self.parent() else None)
+        if screen:
+            geo = screen.geometry()
+            return (geo.x(), geo.y(), geo.width(), geo.height())
+        # Fallback: use bounding box of all windows
         if not self.windows:
             return (0, 0, 800, 600)
         min_x = min(w['at'][0] for w in self.windows)

@@ -149,7 +149,7 @@ HyprSnipper uses a simplified 8-color palette system for easy theming:
 
 Add this to your `hyprland.conf` for so that it floats correctly.
 ```conf
-windowrule = float, title:HyprSnipperSelector
+windowrule = match:title HyprSnipperSelector, float on
 ```
 Optional: Bind to a key for quick access
 ```conf
