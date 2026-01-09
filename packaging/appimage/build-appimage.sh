@@ -115,6 +115,13 @@ EOF
 set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
 export APPDIR="$HERE"
+# Preserve host PATH to access hyprctl, grim, slurp, wl-clipboard, etc.
+# Prepend AppDir paths but keep host system binaries accessible
+if [ -n "${APPIMAGE_ORIGINAL_PATH:-}" ]; then
+  export PATH="${APPIMAGE_ORIGINAL_PATH}"
+fi
+# Ensure common binary locations are in PATH
+export PATH="$PATH:/usr/local/bin:/usr/bin:/bin"
 exec "$HERE/usr/bin/hyprsnipper" "$@"
 EOF
   chmod +x "$APPDIR/AppRun"
