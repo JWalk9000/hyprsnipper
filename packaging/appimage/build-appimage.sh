@@ -102,6 +102,12 @@ else
   cat > "$APPDIR/usr/bin/$BIN_NAME" <<'EOF'
 #!/usr/bin/env bash
 set -e
+# Preserve host PATH for hyprctl, grim, slurp, wl-clipboard access
+if [ -n "${APPIMAGE_ORIGINAL_PATH:-}" ]; then
+  export PATH="${APPIMAGE_ORIGINAL_PATH}"
+fi
+# Ensure common binary locations are in PATH
+export PATH="$PATH:/usr/local/bin:/usr/bin:/bin"
 exec "$(dirname "$0")/../lib/hyprsnipper/hyprsnipper" "$@"
 EOF
   chmod +x "$APPDIR/usr/bin/$BIN_NAME"
