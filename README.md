@@ -69,7 +69,7 @@ The installer will:
 1. Install dependencies:
    ```bash
    # Arch/Manjaro
-   sudo pacman -S grim slurp wl-clipboard pyside6 python-pyyaml python-configparser
+   sudo pacman -S grim slurp wl-clipboard pyside6 python-yaml
    
    # Ubuntu/Debian
    sudo apt install grim slurp wl-clipboard python3-pyside6 python3-yaml python3-configparser

@@ -24,7 +24,7 @@ SRC_DIR="$(dirname "$(realpath "$0")")"
 DEFAULT_ICONS_DIR="$SRC_DIR/resources/icons"
 
 DESKTOP_FILE="$APP_NAME.desktop"
-SYSTEM_REQS=(grim slurp wl-clipboard pyside6)
+SYSTEM_REQS=(grim slurp wl-clipboard pyside6 python-yaml)
 PYTHON_REQS=(pyyaml configparser)
 
 # 1. Create config dir and copy defaults, unless they already exist, or --reset is given.
