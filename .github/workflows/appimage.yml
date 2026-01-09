@@ -36,23 +36,26 @@ jobs:
         run: |
           chmod +x packaging/appimage/build-appimage.sh
           packaging/appimage/build-appimage.sh
+          # The build script creates HyprSnipper-${VERSION}-${ARCH}.AppImage
+          # Create a symlink for consistent naming
+          ln -sf HyprSnipper-${{ github.ref_name }}-x86_64.AppImage HyprSnipper-x86_64.AppImage
 
       - name: Compute checksum
         run: |
-          sha256sum HyprSnipper-x86_64.AppImage | tee HyprSnipper-x86_64.AppImage.sha256
+          sha256sum HyprSnipper-${{ github.ref_name }}-x86_64.AppImage | tee HyprSnipper-${{ github.ref_name }}-x86_64.AppImage.sha256
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: appimage-${{ github.ref_name }}-x86_64
           path: |
-            HyprSnipper-x86_64.AppImage
-            HyprSnipper-x86_64.AppImage.sha256
+            HyprSnipper-${{ github.ref_name }}-x86_64.AppImage
+            HyprSnipper-${{ github.ref_name }}-x86_64.AppImage.sha256
 
       - name: Upload to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            HyprSnipper-x86_64.AppImage
-            HyprSnipper-x86_64.AppImage.sha256
+            HyprSnipper-${{ github.ref_name }}-x86_64.AppImage
+            HyprSnipper-${{ github.ref_name }}-x86_64.AppImage.sha256
